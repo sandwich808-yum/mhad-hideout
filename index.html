@@ -1,0 +1,873 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Mhad Hideout</title>
+<meta name="description" content="Mhad's Hideout — a Kali Linux themed desktop portfolio.">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='20' fill='%230a0e17'/%3E%3Ctext x='50' y='68' font-family='Georgia,serif' font-size='58' font-weight='700' fill='%2300b7ff' text-anchor='middle'%3EM%3C/text%3E%3C/svg%3E">
+<style>
+  :root{
+    --bg:#0a0e17;
+    --bg2:#0d1320;
+    --panel:#12161f;
+    --panel-border:#1f2733;
+    --accent:#00b7ff;
+    --accent2:#7b2ff7;
+    --dragon:#3a7bd5;
+    --text:#e6ecf2;
+    --muted:#8b98a8;
+    --green:#3ddc84;
+    --danger:#ff5f56;
+    --warn:#ffbd2e;
+    --ok:#27c93f;
+    --win-bg:#161b26;
+    --win-border:#232b3a;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;height:100%;overflow:hidden;background:#000;
+    font-family:"Segoe UI",Ubuntu,Cantarell,Roboto,Arial,sans-serif;color:var(--text);}
+  ::selection{background:var(--accent);color:#00131c;}
+  a{color:var(--accent);}
+  button{font-family:inherit;}
+
+  /* ---------------- BOOT SCREEN ---------------- */
+  #boot{
+    position:fixed;inset:0;background:radial-gradient(ellipse at center, #0b1120 0%, #05070c 70%);
+    display:flex;flex-direction:column;align-items:center;justify-content:center;
+    z-index:9999;cursor:pointer;transition:opacity .6s ease;
+  }
+  #boot.hide{opacity:0;pointer-events:none;}
+  .boot-logo-wrap{position:relative;width:160px;height:160px;display:flex;align-items:center;justify-content:center;}
+  .boot-ring{position:absolute;inset:0;border-radius:50%;
+    border:2px solid rgba(0,183,255,.25);
+    animation:spin 3.2s linear infinite;
+  }
+  .boot-ring:nth-child(2){inset:14px;border-color:rgba(123,47,247,.3);animation-duration:2.2s;animation-direction:reverse;}
+  .boot-ring:nth-child(3){inset:28px;border-color:rgba(0,183,255,.5);animation-duration:1.6s;}
+  @keyframes spin{to{transform:rotate(360deg);}}
+  .boot-m{
+    font-family:Georgia,'Times New Roman',serif;font-weight:700;font-size:64px;
+    background:linear-gradient(180deg,#5fd4ff 0%, #00b7ff 45%, #7b2ff7 100%);
+    -webkit-background-clip:text;background-clip:text;color:transparent;
+    filter:drop-shadow(0 0 18px rgba(0,183,255,.55));
+    animation:pulse 1.8s ease-in-out infinite;
+    position:relative;z-index:2;
+  }
+  @keyframes pulse{0%,100%{filter:drop-shadow(0 0 10px rgba(0,183,255,.4));}50%{filter:drop-shadow(0 0 28px rgba(123,47,247,.8));}}
+  .boot-wing{position:absolute;top:50%;width:70px;height:26px;opacity:.55;}
+  .boot-wing.l{left:-46px;transform:translateY(-50%) scaleX(-1);}
+  .boot-wing.r{right:-46px;transform:translateY(-50%);}
+  .boot-title{margin-top:28px;font-size:15px;letter-spacing:4px;color:var(--muted);text-transform:uppercase;}
+  .boot-sub{margin-top:6px;font-size:12px;color:#54617a;letter-spacing:1px;}
+  .boot-log{margin-top:22px;font-family:'Consolas',monospace;font-size:11px;color:#3f4b5e;height:80px;width:340px;text-align:left;overflow:hidden;}
+  .boot-log div{opacity:0;animation:fadeIn .3s forwards;white-space:nowrap;}
+  .boot-log span{color:var(--green);}
+  .boot-dots{margin-top:18px;display:flex;gap:6px;}
+  .boot-dots i{width:6px;height:6px;border-radius:50%;background:#22303f;display:block;animation:dot 1.2s infinite;}
+  .boot-dots i:nth-child(2){animation-delay:.15s;}
+  .boot-dots i:nth-child(3){animation-delay:.3s;}
+  .boot-dots i:nth-child(4){animation-delay:.45s;}
+  @keyframes dot{0%,80%,100%{background:#22303f;}40%{background:var(--accent);}}
+  @keyframes fadeIn{to{opacity:1;}}
+  .boot-hint{position:absolute;bottom:26px;font-size:11px;color:#334153;letter-spacing:1px;}
+
+  /* ---------------- DESKTOP ---------------- */
+  #desktop{position:fixed;inset:0;display:none;}
+  #desktop.show{display:block;}
+  #wallpaper{
+    position:absolute;inset:0;
+    background:
+      radial-gradient(circle at 20% 15%, rgba(0,183,255,.10), transparent 40%),
+      radial-gradient(circle at 85% 80%, rgba(123,47,247,.14), transparent 45%),
+      linear-gradient(160deg,#0a0e17 0%, #0d1424 45%, #0a0e17 100%);
+  }
+  #wallpaper svg{position:absolute;inset:0;width:100%;height:100%;opacity:.06;}
+
+  .desktop-icons{position:absolute;top:16px;right:16px;display:flex;flex-direction:column;gap:18px;z-index:5;}
+  .dicon{width:78px;text-align:center;cursor:pointer;user-select:none;padding:6px;border-radius:6px;}
+  .dicon:hover{background:rgba(255,255,255,.06);}
+  .dicon .glyph{width:46px;height:38px;margin:0 auto 6px;display:flex;align-items:center;justify-content:center;font-size:26px;}
+  .dicon span{font-size:11.5px;color:#dfe8f2;text-shadow:0 1px 2px #000;display:block;}
+
+  /* top panel (xfce style) */
+  #panel{
+    position:absolute;top:0;left:0;right:0;height:30px;z-index:50;
+    background:linear-gradient(#161c28,#12161f);
+    border-bottom:1px solid #060a10;
+    display:flex;align-items:center;justify-content:space-between;
+    padding:0 8px;font-size:12.5px;color:#cfd8e3;
+  }
+  #panel .left{display:flex;align-items:center;gap:14px;height:100%;}
+  #menu-btn{display:flex;align-items:center;gap:6px;height:100%;padding:0 10px;cursor:pointer;font-weight:600;}
+  #menu-btn:hover{background:rgba(0,183,255,.12);}
+  #menu-btn .mlogo{font-family:Georgia,serif;color:var(--accent);font-weight:700;}
+  .panel-app{padding:0 8px;height:100%;display:flex;align-items:center;opacity:.85;cursor:default;}
+  #panel .right{display:flex;align-items:center;gap:12px;}
+  #panel .right .grp{display:flex;gap:8px;opacity:.8;}
+  #clock{cursor:default;font-variant-numeric:tabular-nums;}
+
+  /* start menu */
+  #startmenu{position:absolute;top:30px;left:4px;width:300px;background:var(--panel);
+    border:1px solid var(--panel-border);border-radius:0 0 8px 8px;box-shadow:0 12px 30px rgba(0,0,0,.5);
+    z-index:60;display:none;padding:10px;}
+  #startmenu.open{display:block;}
+  #startmenu .sm-head{font-size:12px;color:var(--muted);padding:4px 6px 8px;border-bottom:1px solid var(--panel-border);margin-bottom:6px;}
+  .sm-item{display:flex;align-items:center;gap:10px;padding:7px 8px;border-radius:6px;cursor:pointer;font-size:13px;}
+  .sm-item:hover{background:rgba(0,183,255,.12);}
+  .sm-item .ico{width:20px;text-align:center;}
+
+  /* dock / taskbar bottom */
+  #dock{position:absolute;left:50%;bottom:8px;transform:translateX(-50%);
+    display:flex;gap:4px;background:rgba(15,19,28,.85);backdrop-filter:blur(10px);
+    border:1px solid var(--panel-border);border-radius:12px;padding:6px 8px;z-index:50;}
+  .dock-item{width:40px;height:40px;border-radius:8px;display:flex;align-items:center;justify-content:center;
+    font-size:19px;cursor:pointer;position:relative;transition:transform .12s,background .12s;}
+  .dock-item:hover{background:rgba(0,183,255,.15);transform:translateY(-4px);}
+  .dock-item.running::after{content:"";position:absolute;bottom:-4px;left:50%;transform:translateX(-50%);
+    width:4px;height:4px;border-radius:50%;background:var(--accent);}
+  .dock-sep{width:1px;background:var(--panel-border);margin:4px 4px;}
+
+  /* windows */
+  .window{position:absolute;min-width:320px;min-height:220px;background:var(--win-bg);
+    border:1px solid var(--win-border);border-radius:8px;box-shadow:0 20px 50px rgba(0,0,0,.55);
+    display:flex;flex-direction:column;overflow:hidden;z-index:10;}
+  .titlebar{height:34px;background:linear-gradient(#1c2330,#161b26);display:flex;align-items:center;
+    padding:0 10px;gap:8px;cursor:move;border-bottom:1px solid #0c1017;user-select:none;}
+  .tb-btn{width:12px;height:12px;border-radius:50%;border:none;cursor:pointer;}
+  .tb-close{background:var(--danger);} .tb-min{background:var(--warn);} .tb-max{background:var(--ok);}
+  .titlebar .wtitle{flex:1;text-align:center;font-size:12.5px;color:#c7d1de;}
+  .wbody{flex:1;overflow:auto;background:var(--win-bg);}
+  .window.focused{border-color:var(--accent);box-shadow:0 20px 60px rgba(0,183,255,.18),0 20px 50px rgba(0,0,0,.55);}
+
+  /* generic app content styles */
+  .app-pad{padding:16px;font-size:13.5px;line-height:1.6;color:#d6dee8;}
+  .tabs{display:flex;gap:4px;border-bottom:1px solid var(--panel-border);padding:8px 8px 0;}
+  .tab{padding:6px 12px;font-size:12.5px;border-radius:6px 6px 0 0;cursor:pointer;color:var(--muted);}
+  .tab.active{background:var(--win-bg);color:var(--accent);border:1px solid var(--panel-border);border-bottom:none;}
+  .chip{display:inline-block;padding:4px 10px;border-radius:14px;background:#1d2432;border:1px solid var(--panel-border);
+    font-size:11.5px;color:#aebbcb;margin:2px 4px 2px 0;}
+  .grid2{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:10px;}
+  .card{background:#101520;border:1px solid var(--panel-border);border-radius:8px;padding:10px 12px;}
+  .card .k{font-size:10.5px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;}
+  .card .v{font-size:13px;margin-top:2px;color:#e6ecf2;}
+  .avatar{width:86px;height:86px;border-radius:50%;margin:0 auto 12px;display:flex;align-items:center;justify-content:center;
+    background:radial-gradient(circle at 30% 30%, #1c2534, #0a0e17);border:2px solid var(--accent);
+    font-family:Georgia,serif;font-size:40px;font-weight:700;color:var(--accent);}
+
+  /* files app */
+  .files-wrap{display:flex;height:100%;}
+  .files-side{width:150px;background:#0d1119;border-right:1px solid var(--panel-border);padding:10px 6px;font-size:12.5px;}
+  .files-side .fsec{color:var(--muted);font-size:10px;text-transform:uppercase;margin:10px 6px 4px;}
+  .files-side .fitem{padding:6px 8px;border-radius:6px;cursor:pointer;color:#c7d1de;display:flex;gap:8px;align-items:center;}
+  .files-side .fitem.active,.files-side .fitem:hover{background:rgba(0,183,255,.14);color:var(--accent);}
+  .files-main{flex:1;padding:14px;}
+  .files-crumb{font-size:12px;color:var(--muted);margin-bottom:10px;}
+  .files-crumb b{color:var(--accent);cursor:pointer;font-weight:600;}
+  .flist .frow{display:flex;align-items:center;gap:10px;padding:7px 8px;border-radius:6px;cursor:pointer;font-size:13px;}
+  .flist .frow:hover{background:rgba(255,255,255,.05);}
+  .flist .frow .fname{flex:1;}
+  .flist .fdate,.flist .fkind{width:90px;color:var(--muted);font-size:11.5px;}
+  .empty-note{color:var(--muted);text-align:center;margin-top:40px;font-size:13px;}
+
+  /* terminal */
+  .term{background:#080b10;color:#d8e0ea;font-family:'Consolas','Courier New',monospace;font-size:13px;
+    padding:12px;height:100%;overflow-y:auto;}
+  .term .line{white-space:pre-wrap;word-break:break-word;margin-bottom:2px;}
+  .term .prompt-row{display:flex;}
+  .term .p1{color:#5fd4ff;}
+  .term .p2{color:#7b2ff7;}
+  .term .p3{color:#3ddc84;}
+  .term input{background:transparent;border:none;outline:none;color:#fff;font-family:inherit;font-size:13px;flex:1;}
+  .term a{color:#5fd4ff;}
+
+  /* socials */
+  .soc-row{display:flex;align-items:center;gap:12px;padding:10px 6px;border-bottom:1px solid var(--panel-border);cursor:pointer;}
+  .soc-row:hover{background:rgba(255,255,255,.04);}
+  .soc-ico{width:34px;height:34px;border-radius:9px;display:flex;align-items:center;justify-content:center;font-size:17px;flex:none;}
+  .soc-name{font-size:13.5px;font-weight:600;}
+  .soc-handle{font-size:11.5px;color:var(--muted);}
+  .soc-arrow{margin-left:auto;color:var(--muted);}
+
+  /* notes / mail / messages */
+  .split{display:flex;height:100%;}
+  .split-list{width:190px;border-right:1px solid var(--panel-border);overflow-y:auto;}
+  .split-list .li{padding:10px 12px;border-bottom:1px solid var(--panel-border);cursor:pointer;font-size:12.5px;}
+  .split-list .li.active,.split-list .li:hover{background:rgba(0,183,255,.1);}
+  .split-list .li b{display:block;font-size:13px;margin-bottom:2px;}
+  .split-list .li small{color:var(--muted);}
+  .split-detail{flex:1;padding:16px;overflow-y:auto;font-size:13.5px;line-height:1.7;}
+  .bubble{max-width:75%;padding:8px 12px;border-radius:14px;margin-bottom:8px;font-size:13px;}
+  .bubble.me{background:var(--dragon);margin-left:auto;color:#fff;}
+  .bubble.them{background:#1c2432;}
+
+  /* calculator */
+  .calc{padding:14px;}
+  .calc-disp{background:#0a0e17;border:1px solid var(--panel-border);border-radius:8px;padding:16px;text-align:right;
+    font-size:28px;margin-bottom:10px;font-family:'Consolas',monospace;}
+  .calc-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;}
+  .calc-btn{padding:14px 0;border-radius:8px;border:none;background:#1c2330;color:#fff;font-size:15px;cursor:pointer;}
+  .calc-btn:hover{background:#263044;}
+  .calc-btn.op{background:var(--dragon);}
+  .calc-btn.op:hover{background:#4a8ae0;}
+
+  /* calendar */
+  .cal-head{display:flex;align-items:center;justify-content:space-between;padding:12px 14px;border-bottom:1px solid var(--panel-border);}
+  .cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:1px;background:var(--panel-border);}
+  .cal-cell{background:var(--win-bg);min-height:52px;padding:6px;font-size:12px;color:#aebbcb;}
+  .cal-cell.today{background:rgba(0,183,255,.14);color:var(--accent);font-weight:700;}
+  .cal-dow{background:#0d1119;text-align:center;padding:6px 0;font-size:11px;color:var(--muted);}
+
+  /* scrollbars */
+  ::-webkit-scrollbar{width:9px;height:9px;}
+  ::-webkit-scrollbar-track{background:transparent;}
+  ::-webkit-scrollbar-thumb{background:#232c3b;border-radius:6px;}
+
+  .footer-credit{position:absolute;bottom:6px;left:10px;font-size:10.5px;color:#2a3345;z-index:5;}
+</style>
+</head>
+<body>
+
+<!-- BOOT SCREEN -->
+<div id="boot">
+  <div class="boot-logo-wrap">
+    <div class="boot-ring"></div><div class="boot-ring"></div><div class="boot-ring"></div>
+    <div class="boot-m">M</div>
+  </div>
+  <div class="boot-title">Mhad Hideout OS</div>
+  <div class="boot-sub">kernel 6.12.3-mhad · booting…</div>
+  <div class="boot-log" id="bootlog"></div>
+  <div class="boot-dots"><i></i><i></i><i></i><i></i></div>
+  <div class="boot-hint">click anywhere to boot now</div>
+</div>
+
+<!-- DESKTOP -->
+<div id="desktop">
+  <div id="wallpaper">
+    <svg viewBox="0 0 800 600" preserveAspectRatio="xMidYMid slice">
+      <path d="M0 500 L200 380 L400 460 L600 340 L800 420 L800 600 L0 600 Z" fill="#3a7bd5"/>
+      <path d="M0 540 L250 460 L450 520 L650 420 L800 500 L800 600 L0 600 Z" fill="#7b2ff7"/>
+    </svg>
+  </div>
+
+  <div class="desktop-icons">
+    <div class="dicon" data-open="about"><div class="glyph">🗂️</div><span>About Me</span></div>
+    <div class="dicon" data-open="socials"><div class="glyph">🔗</div><span>Socials</span></div>
+    <div class="dicon" data-open="files" data-path="Documents/Projects"><div class="glyph">📁</div><span>Projects</span></div>
+  </div>
+
+  <!-- top panel -->
+  <div id="panel">
+    <div class="left">
+      <div id="menu-btn"><span class="mlogo">M</span> Applications</div>
+      <div class="panel-app">Places</div>
+      <div class="panel-app">System</div>
+    </div>
+    <div class="right">
+      <div class="grp">📶 🔊 🔋</div>
+      <div id="clock">--:-- --</div>
+    </div>
+  </div>
+
+  <!-- start menu -->
+  <div id="startmenu">
+    <div class="sm-head">mhad@hideout</div>
+    <div class="sm-item" data-open="about"><span class="ico">🗂️</span> About Me</div>
+    <div class="sm-item" data-open="socials"><span class="ico">🔗</span> Socials</div>
+    <div class="sm-item" data-open="files"><span class="ico">📁</span> Files</div>
+    <div class="sm-item" data-open="terminal"><span class="ico">🖳</span> Terminal</div>
+    <div class="sm-item" data-open="notes"><span class="ico">📝</span> Notes</div>
+    <div class="sm-item" data-open="mail"><span class="ico">✉️</span> Mail</div>
+    <div class="sm-item" data-open="messages"><span class="ico">💬</span> Messages</div>
+    <div class="sm-item" data-open="calculator"><span class="ico">🧮</span> Calculator</div>
+    <div class="sm-item" data-open="calendar"><span class="ico">📅</span> Calendar</div>
+  </div>
+
+  <!-- dock -->
+  <div id="dock">
+    <div class="dock-item" data-open="files" title="Files">📁</div>
+    <div class="dock-item" data-open="terminal" title="Terminal">🖳</div>
+    <div class="dock-item" data-open="about" title="About Me">🗂️</div>
+    <div class="dock-item" data-open="socials" title="Socials">🔗</div>
+    <div class="dock-sep"></div>
+    <div class="dock-item" data-open="notes" title="Notes">📝</div>
+    <div class="dock-item" data-open="mail" title="Mail">✉️</div>
+    <div class="dock-item" data-open="messages" title="Messages">💬</div>
+    <div class="dock-sep"></div>
+    <div class="dock-item" data-open="calculator" title="Calculator">🧮</div>
+    <div class="dock-item" data-open="calendar" title="Calendar">📅</div>
+  </div>
+
+  <div id="windows-layer"></div>
+  <div class="footer-credit">Mhad Hideout OS — inspired by Kali Linux / Win-KeX</div>
+</div>
+
+<script>
+(function(){
+  "use strict";
+
+  /* ---------- BOOT SEQUENCE ---------- */
+  const bootLines = [
+    "Loading kernel modules ...",
+    "Mounting /home/mhad ...",
+    "Starting network-manager ...",
+    "Starting xfce4-session ...",
+    "<span>[ OK ]</span> Welcome to Mhad Hideout"
+  ];
+  const bootLogEl = document.getElementById('bootlog');
+  bootLines.forEach((l,i)=>{
+    const d = document.createElement('div');
+    d.style.animationDelay = (i*0.35)+'s';
+    d.innerHTML = l;
+    bootLogEl.appendChild(d);
+  });
+  const boot = document.getElementById('boot');
+  const desktop = document.getElementById('desktop');
+  function enterDesktop(){
+    if(boot.classList.contains('hide')) return;
+    boot.classList.add('hide');
+    desktop.classList.add('show');
+    setTimeout(()=>{ boot.style.display='none'; },650);
+  }
+  boot.addEventListener('click', enterDesktop);
+  setTimeout(enterDesktop, 3400);
+
+  /* ---------- CLOCK ---------- */
+  function tick(){
+    const now = new Date();
+    const opts = {weekday:'short', month:'short', day:'numeric'};
+    const dateStr = now.toLocaleDateString(undefined,opts);
+    let h = now.getHours(); const m = now.getMinutes().toString().padStart(2,'0');
+    const ampm = h>=12 ? 'PM':'AM'; h = h%12; if(h===0)h=12;
+    document.getElementById('clock').textContent = `${dateStr}  ${h}:${m} ${ampm}`;
+  }
+  tick(); setInterval(tick,1000*15);
+
+  /* ---------- WINDOW MANAGER ---------- */
+  const layer = document.getElementById('windows-layer');
+  let zTop = 10;
+  const openApps = {}; // id -> element
+
+  function focusWin(el){
+    zTop++; el.style.zIndex = zTop;
+    document.querySelectorAll('.window').forEach(w=>w.classList.remove('focused'));
+    el.classList.add('focused');
+  }
+
+  function makeWindow(id, title, contentHtml, w, h){
+    if(openApps[id]){ focusWin(openApps[id]); return openApps[id]; }
+    const el = document.createElement('div');
+    el.className = 'window';
+    el.style.width = (w||460)+'px';
+    el.style.height = (h||360)+'px';
+    const left = 90 + Object.keys(openApps).length*26;
+    const top = 46 + Object.keys(openApps).length*22;
+    el.style.left = left+'px'; el.style.top = top+'px';
+    el.innerHTML = `
+      <div class="titlebar">
+        <button class="tb-btn tb-close" data-act="close"></button>
+        <button class="tb-btn tb-min" data-act="min"></button>
+        <button class="tb-btn tb-max" data-act="max"></button>
+        <div class="wtitle">${title}</div>
+      </div>
+      <div class="wbody">${contentHtml}</div>
+    `;
+    layer.appendChild(el);
+    openApps[id] = el;
+    focusWin(el);
+
+    // dock indicator
+    const dockItem = document.querySelector(`.dock-item[data-open="${id}"]`);
+    if(dockItem) dockItem.classList.add('running');
+
+    // dragging
+    const tb = el.querySelector('.titlebar');
+    let drag=null;
+    tb.addEventListener('mousedown', e=>{
+      if(e.target.classList.contains('tb-btn')) return;
+      focusWin(el);
+      drag = {x:e.clientX - el.offsetLeft, y:e.clientY - el.offsetTop};
+    });
+    document.addEventListener('mousemove', e=>{
+      if(!drag) return;
+      el.style.left = Math.max(0,e.clientX-drag.x)+'px';
+      el.style.top = Math.max(30,e.clientY-drag.y)+'px';
+    });
+    document.addEventListener('mouseup', ()=> drag=null);
+
+    el.addEventListener('mousedown', ()=>focusWin(el));
+
+    el.querySelector('[data-act="close"]').addEventListener('click', ()=>{
+      el.remove(); delete openApps[id];
+      if(dockItem) dockItem.classList.remove('running');
+    });
+    el.querySelector('[data-act="min"]').addEventListener('click', ()=>{
+      el.style.display = el.style.display==='none' ? 'flex' : 'none';
+    });
+    let maximized=false, prev=null;
+    el.querySelector('[data-act="max"]').addEventListener('click', ()=>{
+      if(!maximized){
+        prev = {left:el.style.left, top:el.style.top, width:el.style.width, height:el.style.height};
+        el.style.left='0px'; el.style.top='30px'; el.style.width='100%'; el.style.height='calc(100% - 30px)';
+      } else {
+        el.style.left=prev.left; el.style.top=prev.top; el.style.width=prev.width; el.style.height=prev.height;
+      }
+      maximized=!maximized;
+    });
+    return el;
+  }
+
+  /* ---------- APP CONTENT BUILDERS ---------- */
+  function aboutContent(){
+    return `
+      <div class="tabs" id="about-tabs">
+        <div class="tab active" data-t="profile">Profile</div>
+        <div class="tab" data-t="skills">Skills</div>
+        <div class="tab" data-t="background">Background</div>
+      </div>
+      <div class="app-pad" id="about-body">
+        <div class="avatar">M</div>
+        <h2 style="text-align:center;margin:0 0 2px;color:var(--accent);">Mhad</h2>
+        <p style="text-align:center;color:var(--muted);margin:0 0 12px;">Hacker / Builder / Creator / Earth</p>
+        <div style="text-align:center;">
+          <span class="chip">Offensive Sec</span><span class="chip">Dev</span><span class="chip">Linux</span><span class="chip">Automation</span>
+        </div>
+        <p style="margin-top:14px;">Self-taught builder living in the terminal. I break things to understand them,
+        then build better ones. Kali is home, the shell is the interface, curiosity is the exploit.</p>
+        <div class="grid2">
+          <div class="card"><div class="k">Location</div><div class="v">Earth</div></div>
+          <div class="card"><div class="k">Status</div><div class="v">Available for work</div></div>
+          <div class="card"><div class="k">Stack</div><div class="v">Python / Bash / JS / C</div></div>
+          <div class="card"><div class="k">Currently</div><div class="v">Building Mhad Hideout</div></div>
+        </div>
+      </div>`;
+  }
+  function aboutSkills(){
+    return `
+      <div class="tabs" id="about-tabs">
+        <div class="tab" data-t="profile">Profile</div>
+        <div class="tab active" data-t="skills">Skills</div>
+        <div class="tab" data-t="background">Background</div>
+      </div>
+      <div class="app-pad" id="about-body">
+        <h3 style="color:var(--accent);margin-top:0;">Languages</h3>
+        <span class="chip">Python</span><span class="chip">Bash</span><span class="chip">JavaScript</span><span class="chip">C</span><span class="chip">SQL</span>
+        <h3 style="color:var(--accent);">Tools</h3>
+        <span class="chip">Nmap</span><span class="chip">Burp Suite</span><span class="chip">Metasploit</span><span class="chip">Wireshark</span><span class="chip">Git</span><span class="chip">Docker</span>
+      </div>`;
+  }
+  function aboutBackground(){
+    return `
+      <div class="tabs" id="about-tabs">
+        <div class="tab" data-t="profile">Profile</div>
+        <div class="tab" data-t="skills">Skills</div>
+        <div class="tab active" data-t="background">Background</div>
+      </div>
+      <div class="app-pad" id="about-body">
+        <h3 style="color:var(--accent);margin-top:0;">Background</h3>
+        <p>Started out curious about how systems break, stayed for the craft of making them unbreakable.
+        Runs everything on Linux, thinks in shell scripts, and believes the best interface is a terminal
+        with a well-placed prompt. When not at the keyboard, probably still at the keyboard.</p>
+      </div>`;
+  }
+  function wireAboutTabs(el){
+    el.addEventListener('click', e=>{
+      const t = e.target.closest('.tab'); if(!t) return;
+      const body = el.querySelector('.wbody');
+      const which = t.dataset.t;
+      body.innerHTML = which==='profile'?aboutContent():which==='skills'?aboutSkills():aboutBackground();
+      wireAboutTabs(el);
+    });
+  }
+
+  function socialsContent(){
+    const items = [
+      ['💻','GitHub','@mhad','#161b26'],
+      ['🎮','Discord','Mhad#0001','#5865F2'],
+      ['🎵','Spotify','Mhad','#1DB954'],
+      ['📷','Instagram','@mhad.dev','#d6336c'],
+      ['🕹️','Steam','view library','#171a21'],
+      ['🎥','Twitch','mhadhacks','#9147ff'],
+      ['🎶','TikTok','@mhad','#010101'],
+    ];
+    return `<div class="app-pad" style="padding:8px 4px;">` + items.map(i=>`
+      <div class="soc-row">
+        <div class="soc-ico" style="background:${i[3]}22;color:${i[3]==='#161b26'?'#fff':i[3]};">${i[0]}</div>
+        <div><div class="soc-name">${i[1]}</div><div class="soc-handle">${i[2]}</div></div>
+        <div class="soc-arrow">›</div>
+      </div>`).join('') + `</div>`;
+  }
+
+  // virtual filesystem for Files + Terminal
+  const FS = {
+    "Applications": {type:'dir', children:{
+      "About Me":{type:'app'}, "Files":{type:'app'}, "Terminal":{type:'app'},
+      "Notes":{type:'app'}, "Mail":{type:'app'}, "Messages":{type:'app'},
+      "Calculator":{type:'app'}, "Calendar":{type:'app'}, "Trash":{type:'app'}
+    }},
+    "Desktop": {type:'dir', children:{}},
+    "Documents": {type:'dir', children:{
+      "Personal": {type:'dir', children:{}},
+      "Projects": {type:'dir', children:{
+        "mhad-hideout":{type:'file', kind:'Git repo'},
+        "recon-toolkit":{type:'file', kind:'Python'},
+        "packet-sniffer":{type:'file', kind:'C'}
+      }},
+      "Payloads — Do Not Open":{type:'file', kind:'Sh'},
+      "The Problems With New Technology Today":{type:'file', kind:'Pdf'}
+    }},
+    "Downloads": {type:'dir', children:{}},
+    "Pictures": {type:'dir', children:{}},
+    "Music": {type:'dir', children:{"Albums":{type:'dir',children:{}}, "Playlists":{type:'dir',children:{}}}},
+  };
+  function resolvePath(path){
+    const parts = path.split('/').filter(Boolean);
+    let node = {type:'dir', children:FS};
+    for(const p of parts){
+      if(!node.children || !node.children[p]) return null;
+      node = node.children[p];
+    }
+    return node;
+  }
+  function filesContent(path){
+    path = path || "Documents";
+    const node = resolvePath(path) || {type:'dir', children:{}};
+    const parts = path.split('/').filter(Boolean);
+    const crumbs = ['Home'].concat(parts).map((p,i)=>`<b data-crumb="${parts.slice(0,i).join('/')}">${p}</b>`).join(' / ');
+    const sidebarDirs = ["Desktop","Documents","Downloads","Pictures","Music"];
+    const rows = node.children && Object.keys(node.children).length
+      ? Object.entries(node.children).map(([name,n])=>`
+        <div class="frow" data-name="${name}" data-kind="${n.type}">
+          <span>${n.type==='dir'?'📁':'📄'}</span>
+          <span class="fname">${name}</span>
+          <span class="fkind">${n.type==='dir'?'Folder':(n.kind||'File')}</span>
+        </div>`).join('')
+      : `<div class="empty-note">This folder is empty</div>`;
+    return `
+      <div class="files-wrap">
+        <div class="files-side">
+          <div class="fsec">Favourites</div>
+          ${sidebarDirs.map(d=>`<div class="fitem" data-goto="${d}">${d==='Desktop'?'🖥️':d==='Documents'?'📄':d==='Downloads'?'⬇️':d==='Pictures'?'🖼️':'🎵'} ${d}</div>`).join('')}
+        </div>
+        <div class="files-main">
+          <div class="files-crumb">${crumbs}</div>
+          <div class="flist">${rows}</div>
+        </div>
+      </div>`;
+  }
+  function wireFiles(el, initPath){
+    let path = initPath || "Documents";
+    function render(){ el.querySelector('.wbody').innerHTML = filesContent(path); bind(); }
+    function bind(){
+      el.querySelectorAll('.fitem').forEach(f=>f.addEventListener('click',()=>{path=f.dataset.goto; render();}));
+      el.querySelectorAll('[data-crumb]').forEach(c=>c.addEventListener('click',()=>{path=c.dataset.crumb; render();}));
+      el.querySelectorAll('.frow[data-kind="dir"]').forEach(r=>r.addEventListener('dblclick',()=>{
+        path = path ? path+'/'+r.dataset.name : r.dataset.name; render();
+      }));
+    }
+    render();
+  }
+
+  function notesContent(){
+    return `<div class="split">
+      <div class="split-list" id="notes-list">
+        <div class="li active" data-n="0"><b>Manifesto</b><small>Build fast, break responsibly.</small></div>
+        <div class="li" data-n="1"><b>Ideas</b><small>Hideout v2 concepts...</small></div>
+        <div class="li" data-n="2"><b>TODO</b><small>Patch the exploit, ship the site.</small></div>
+      </div>
+      <div class="split-detail" id="notes-detail">
+        "Build fast, break responsibly, document everything." — Mhad, 2026
+      </div>
+    </div>`;
+  }
+  function wireNotes(el){
+    const notes = [
+      `"Build fast, break responsibly, document everything." — Mhad, 2026`,
+      `Hideout v2 concepts: terminal-first navigation, live CTF scoreboard widget, dark-only theme.`,
+      `TODO:\n- Patch the exploit\n- Ship the site\n- Sleep (maybe)`
+    ];
+    el.querySelectorAll('.li').forEach(li=>li.addEventListener('click',()=>{
+      el.querySelectorAll('.li').forEach(x=>x.classList.remove('active'));
+      li.classList.add('active');
+      el.querySelector('#notes-detail').textContent = notes[li.dataset.n];
+    }));
+  }
+
+  function mailContent(){
+    return `<div class="split">
+      <div class="split-list" id="mail-list">
+        <div class="li active" data-n="0"><b>root@kali.org</b><small>Your CVE report was triaged</small></div>
+        <div class="li" data-n="1"><b>github@github.com</b><small>Someone starred your repository</small></div>
+        <div class="li" data-n="2"><b>recruiter@bigtech.com</b><small>We'd love to have you on our team</small></div>
+        <div class="li" data-n="3"><b>noreply@future.mhad.dev</b><small>Keep going. You're almost there.</small></div>
+      </div>
+      <div class="split-detail" id="mail-detail">
+        <h3 style="margin-top:0;color:var(--accent);">Your CVE report was triaged</h3>
+        <p style="color:var(--muted);">From: root@kali.org</p>
+        <p>Thanks for the responsible disclosure. Our security team confirmed the finding and a fix is in progress.</p>
+      </div>
+    </div>`;
+  }
+  function wireMail(el){
+    const mails = [
+      {t:"Your CVE report was triaged", f:"root@kali.org", b:"Thanks for the responsible disclosure. Our security team confirmed the finding and a fix is in progress."},
+      {t:"Someone starred your repository", f:"github@github.com", b:"A new user starred mhad-hideout. Keep shipping."},
+      {t:"We'd love to have you on our team", f:"recruiter@bigtech.com", b:"Your portfolio caught our attention — let's talk."},
+      {t:"Keep going. You're almost there.", f:"noreply@future.mhad.dev", b:"Hey, it's you from the future. Everything you're building right now? It matters. Keep going."}
+    ];
+    el.querySelectorAll('.li').forEach(li=>li.addEventListener('click',()=>{
+      el.querySelectorAll('.li').forEach(x=>x.classList.remove('active'));
+      li.classList.add('active');
+      const m = mails[li.dataset.n];
+      el.querySelector('#mail-detail').innerHTML = `<h3 style="margin-top:0;color:var(--accent);">${m.t}</h3><p style="color:var(--muted);">From: ${m.f}</p><p>${m.b}</p>`;
+    }));
+  }
+
+  function messagesContent(){
+    return `<div class="split">
+      <div class="split-list" id="msg-list">
+        <div class="li active" data-n="0"><b>The Crew</b><small>ctf starts in 10</small></div>
+        <div class="li" data-n="1"><b>Mom</b><small>love you too</small></div>
+        <div class="li" data-n="2"><b>Unknown Number</b><small>we need to talk</small></div>
+        <div class="li" data-n="3"><b>🔒 Locked</b><small>••••••</small></div>
+      </div>
+      <div class="split-detail" id="msg-detail"></div>
+    </div>`;
+  }
+  function wireMessages(el){
+    const threads = [
+      [["them","anyone up for the ctf tonight?"],["me","yeah im in, which category?"],["them","ctf starts in 10"]],
+      [["them","have you eaten today?"],["me","yes mom haha"],["them","OK good. Love you"],["me","love you too"]],
+      [["them","we need to talk."],["me","who is this?"],["them","..."]],
+      "locked"
+    ];
+    function render(i){
+      const d = el.querySelector('#msg-detail');
+      if(threads[i]==="locked"){
+        d.innerHTML = `<div style="text-align:center;margin-top:50px;color:var(--muted);">
+          <div style="font-size:30px;">🔒</div><div style="margin-top:8px;">Enter password</div>
+          <input type="password" style="margin-top:12px;background:#0a0e17;border:1px solid var(--panel-border);
+          border-radius:6px;padding:8px;color:#fff;width:180px;text-align:center;" placeholder="••••••">
+        </div>`;
+        return;
+      }
+      d.innerHTML = threads[i].map(m=>`<div class="bubble ${m[0]==='me'?'me':'them'}">${m[1]}</div>`).join('');
+    }
+    render(0);
+    el.querySelectorAll('.li').forEach(li=>li.addEventListener('click',()=>{
+      el.querySelectorAll('.li').forEach(x=>x.classList.remove('active'));
+      li.classList.add('active');
+      render(+li.dataset.n);
+    }));
+  }
+
+  function calculatorContent(){
+    return `<div class="calc">
+      <div class="calc-disp" id="calc-disp">0</div>
+      <div class="calc-grid">
+        <button class="calc-btn" data-k="AC">AC</button><button class="calc-btn" data-k="+/-">+/-</button><button class="calc-btn" data-k="%">%</button><button class="calc-btn op" data-k="/">÷</button>
+        <button class="calc-btn" data-k="7">7</button><button class="calc-btn" data-k="8">8</button><button class="calc-btn" data-k="9">9</button><button class="calc-btn op" data-k="*">×</button>
+        <button class="calc-btn" data-k="4">4</button><button class="calc-btn" data-k="5">5</button><button class="calc-btn" data-k="6">6</button><button class="calc-btn op" data-k="-">-</button>
+        <button class="calc-btn" data-k="1">1</button><button class="calc-btn" data-k="2">2</button><button class="calc-btn" data-k="3">3</button><button class="calc-btn op" data-k="+">+</button>
+        <button class="calc-btn" data-k="0" style="grid-column:span 2;">0</button><button class="calc-btn" data-k=".">.</button><button class="calc-btn op" data-k="=">=</button>
+      </div>
+    </div>`;
+  }
+  function wireCalculator(el){
+    let cur = "0", op = null, prev = null, reset=false;
+    const disp = el.querySelector('#calc-disp');
+    function upd(){ disp.textContent = cur; }
+    el.querySelectorAll('.calc-btn').forEach(b=>b.addEventListener('click',()=>{
+      const k = b.dataset.k;
+      if(k==='AC'){cur="0";op=null;prev=null;}
+      else if(k==='+/-'){cur = (parseFloat(cur)*-1).toString();}
+      else if(k==='%'){cur = (parseFloat(cur)/100).toString();}
+      else if(['/','*','-','+'].includes(k)){ prev=parseFloat(cur); op=k; reset=true; }
+      else if(k==='='){
+        if(op && prev!==null){
+          const n = parseFloat(cur);
+          let r = op==='/'?prev/n:op==='*'?prev*n:op==='-'?prev-n:prev+n;
+          cur = (Math.round(r*1e6)/1e6).toString(); op=null; prev=null;
+        }
+      } else if(k==='.'){ if(!cur.includes('.')) cur+='.'; }
+      else { if(cur==='0'||reset){cur=k; reset=false;} else cur+=k; }
+      upd();
+    }));
+  }
+
+  function calendarContent(){
+    const now = new Date();
+    const y=now.getFullYear(), m=now.getMonth();
+    const first = new Date(y,m,1);
+    const startDow = (first.getDay()+6)%7; // Monday first
+    const daysInMonth = new Date(y,m+1,0).getDate();
+    const monthName = now.toLocaleDateString(undefined,{month:'long', year:'numeric'});
+    let cells = `<div class="cal-dow">MON</div><div class="cal-dow">TUE</div><div class="cal-dow">WED</div><div class="cal-dow">THU</div><div class="cal-dow">FRI</div><div class="cal-dow">SAT</div><div class="cal-dow">SUN</div>`;
+    for(let i=0;i<startDow;i++) cells += `<div class="cal-cell"></div>`;
+    for(let d=1; d<=daysInMonth; d++){
+      const isToday = d===now.getDate();
+      cells += `<div class="cal-cell${isToday?' today':''}">${d}</div>`;
+    }
+    return `<div class="cal-head"><b>${monthName}</b><span style="color:var(--muted);font-size:12px;">Mhad Hideout Calendar</span></div>
+      <div class="cal-grid">${cells}</div>`;
+  }
+
+  /* ---------- TERMINAL ---------- */
+  function terminalShell(el){
+    const body = el.querySelector('.wbody');
+    body.innerHTML = `<div class="term" id="term-out"></div>`;
+    const out = body.querySelector('#term-out');
+    let cwd = "";
+    function promptHTML(){
+      const loc = cwd ? '~/'+cwd : '~';
+      return `<span class="p1">┌──(</span><span class="p3">mhad㉿hideout</span><span class="p1">)-[</span><span class="p2">${loc}</span><span class="p1">]</span>\n<span class="p1">└─$</span> `;
+    }
+    function println(txt){
+      const d = document.createElement('div'); d.className='line'; d.innerHTML = txt; out.appendChild(d);
+    }
+    function newPromptLine(){
+      const row = document.createElement('div'); row.className='line prompt-row';
+      row.innerHTML = promptHTML();
+      const input = document.createElement('input');
+      input.autocomplete='off'; input.spellcheck=false;
+      row.appendChild(input);
+      out.appendChild(row);
+      input.focus();
+      input.addEventListener('keydown', e=>{
+        if(e.key==='Enter'){
+          const cmd = input.value;
+          input.disabled = true;
+          runCmd(cmd);
+        }
+      });
+      out.scrollTop = out.scrollHeight;
+    }
+    function ls(){
+      const node = resolvePath(cwd) || {children:FS};
+      const names = node.children ? Object.keys(node.children) : [];
+      return names.length ? names.map(n=> node.children[n].type==='dir'? n+'/' : n).join('  ') : '';
+    }
+    const neofetchArt =
+`  .::.       mhad@hideout
+ :xxxxx:      -------------
+:xxxxxxx:     OS: KaliOS 2026.1 x86_64
+:xxxxxxx:     Host: Mhad Hideout
+ :xxxxx:      Kernel: 6.12.3-mhad
+  '::'        Shell: zsh 5.9
+              Theme: Dragon-Blue [Dark]
+              Terminal: xterm-kali
+              CPU: Overclocked Curiosity
+              Memory: 1337MiB / 8192MiB`;
+    function runCmd(raw){
+      const cmd = raw.trim();
+      const parts = cmd.split(' ').filter(Boolean);
+      const c = parts[0];
+      if(cmd) println(promptHTML()+escapeHtml(cmd));
+      else println(promptHTML());
+
+      if(!c){}
+      else if(c==='help'){
+        println(`Filesystem: ls, cd, pwd, cat, tree\nSystem: whoami, uname, date, neofetch, clear, about\nFun: sudo, hack, matrix`);
+      } else if(c==='ls'){ println(ls()); }
+      else if(c==='pwd'){ println('/home/mhad/'+cwd); }
+      else if(c==='whoami'){ println('mhad'); }
+      else if(c==='uname'){ println('KaliOS 2026.1 Mhad-Hideout x86_64 GNU/Linux'); }
+      else if(c==='date'){ println(new Date().toString()); }
+      else if(c==='clear'){ out.innerHTML=''; newPromptLine(); return; }
+      else if(c==='neofetch'){ println('<pre style="margin:0;color:#5fd4ff;">'+neofetchArt+'</pre>'); }
+      else if(c==='tree'){
+        println(`.\n├── Applications/\n├── Desktop/\n├── Documents/\n│   ├── Personal/\n│   ├── Projects/\n│   ├── Payloads — Do Not Open\n│   └── The Problems With New Technology Today\n├── Downloads/\n├── Pictures/\n└── Music/`);
+      }
+      else if(c==='cd'){
+        const target = parts.slice(1).join(' ');
+        if(!target || target==='~'){ cwd=''; }
+        else if(target==='..'){ cwd = cwd.split('/').slice(0,-1).join('/'); }
+        else {
+          const newPath = cwd ? cwd+'/'+target : target;
+          const node = resolvePath(newPath);
+          if(node && node.type==='dir') cwd = newPath;
+          else println(`cd: no such directory: ${target}`);
+        }
+      }
+      else if(c==='cat'){
+        const target = parts.slice(1).join(' ');
+        if(target==='Payloads — Do Not Open' || target==='Payloads'){
+          println(`Nice try. Nothing to see here. 👀`);
+        } else println(`(empty file)`);
+      }
+      else if(c==='sudo'){
+        println(`[sudo] password for mhad: \nUser mhad is not in the sudoers file. This incident will be reported. (jk, it's a portfolio)`);
+      }
+      else if(c==='hack'){
+        println(`Initializing exploit chain...\nBypassing firewall... <span style="color:#3ddc84;">done</span>\nEscalating privileges... <span style="color:#3ddc84;">done</span>\nAccess granted. Just kidding — go check the Socials app instead 😉`);
+      }
+      else if(c==='matrix'){
+        println(`<span style="color:#3ddc84;">01001101 01001000 01000001 01000100</span>`);
+      }
+      else if(c==='about'){
+        println(`Mhad Hideout — a Kali-themed developer portfolio. Type "help" for commands.`);
+      }
+      else { println(`command not found: ${c}`); }
+
+      newPromptLine();
+    }
+    function escapeHtml(s){ const d=document.createElement('div'); d.innerText=s; return d.innerHTML; }
+    println(`Welcome to Mhad Hideout Terminal.`);
+    println(`Type "help" for available commands.`);
+    newPromptLine();
+  }
+
+  /* ---------- OPEN DISPATCH ---------- */
+  function openApp(id, opts){
+    opts = opts || {};
+    let el;
+    switch(id){
+      case 'about':
+        el = makeWindow('about','About Me', aboutContent(), 460, 430);
+        wireAboutTabs(el); break;
+      case 'socials':
+        el = makeWindow('socials','Socials', socialsContent(), 380, 460);
+        break;
+      case 'files':
+        el = makeWindow('files','Files', '', 560, 400);
+        wireFiles(el, opts.path); break;
+      case 'terminal':
+        el = makeWindow('terminal','Terminal', '', 560, 380);
+        terminalShell(el); break;
+      case 'notes':
+        el = makeWindow('notes','Notes', notesContent(), 480, 360);
+        wireNotes(el); break;
+      case 'mail':
+        el = makeWindow('mail','Mail', mailContent(), 560, 400);
+        wireMail(el); break;
+      case 'messages':
+        el = makeWindow('messages','Messages', messagesContent(), 520, 420);
+        wireMessages(el); break;
+      case 'calculator':
+        el = makeWindow('calculator','Calculator', calculatorContent(), 300, 420);
+        wireCalculator(el); break;
+      case 'calendar':
+        el = makeWindow('calendar','Calendar', calendarContent(), 520, 420);
+        break;
+    }
+  }
+
+  document.querySelectorAll('[data-open]').forEach(elm=>{
+    elm.addEventListener('click', ()=>{
+      const id = elm.dataset.open;
+      openApp(id, {path: elm.dataset.path});
+      document.getElementById('startmenu').classList.remove('open');
+    });
+  });
+
+  document.getElementById('menu-btn').addEventListener('click', e=>{
+    e.stopPropagation();
+    document.getElementById('startmenu').classList.toggle('open');
+  });
+  document.addEventListener('click', ()=> document.getElementById('startmenu').classList.remove('open'));
+  document.getElementById('startmenu').addEventListener('click', e=>e.stopPropagation());
+
+})();
+</script>
+</body>
+</html>
